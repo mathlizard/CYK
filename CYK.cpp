@@ -27,15 +27,6 @@ private:
 	// the data
 	T **matrix{ nullptr };
 
-	// memory allocation and initial values
-	void initialize_matrix(const size_t &a, const size_t &b) {
-		dim_rows = a;
-		dim_columns = b;
-		matrix = new T*[dim_columns];
-		for (size_t i = 0; i < dim_columns; ++i)
-			matrix[i] = new T[dim_rows];
-	}
-
 public:
 	// rw access to matrix elements
 	T& operator()(const size_t &row, const size_t &col) {
@@ -46,10 +37,11 @@ public:
 	Matrix<T>& operator=(Matrix<T> const &m) {
 		size_t j;
 		this->~Matrix();
-		this->initialize_matrix(m.dim_rows, m.dim_columns);
+		new (this) Matrix(m.dim_rows, m.dim_columns);
 		for (size_t i = 0; i < dim_columns; ++i)
 			for (j = 0; j < dim_rows; ++j)
 				matrix[j][i] = m.matrix[j][i];
+		cerr << "copy assignment operator called" << '\n';
 		return *this;
 	}
 
@@ -58,13 +50,17 @@ public:
 		std::swap(this->matrix, m.matrix);
 		std::swap(this->dim_columns, m.dim_columns);
 		std::swap(this->dim_rows, m.dim_rows);
+		cerr << "move assignment operator called" << '\n';
 		return *this;
 	}
 
 	// constructor without fill value
-	Matrix(const size_t &a, const size_t &b) {
+	Matrix(const size_t &a, const size_t &b) : dim_rows(a), dim_columns(b) {
 		assert(a > 0 && b > 0);
-		initialize_matrix(a, b);
+		matrix = new T*[dim_columns];
+		for (size_t i = 0; i < dim_columns; ++i)
+			matrix[i] = new (nothrow) T[dim_rows];
+		cerr << "constructor called" << '\n';
 	}
 
 	// constructor fills the matrix with fill_value
@@ -73,6 +69,7 @@ public:
 		for (size_t i = 0; i < dim_columns; ++i)
 			for (j = 0; j < dim_rows; ++j)
 				matrix[j][i] = fill_value;
+		cerr << "constructor called with fill_value" << '\n';
 	}
 
 	// default constructor
@@ -83,6 +80,7 @@ public:
 		std::swap(this->matrix, m.matrix);
 		std::swap(this->dim_columns, m.dim_columns);
 		std::swap(this->dim_rows, m.dim_rows);
+		cerr << "move constructor called" << '\n';
 	}
 
 	bool empty() {
@@ -96,6 +94,7 @@ public:
 				delete matrix[i];
 			delete[] matrix;
 			matrix = nullptr;
+			cerr << "destructor called" << '\n';
 		}
 	}
 };
@@ -225,7 +224,8 @@ int main() {
 		  read_from_file("nonterminals.txt", nonterminals_vec)) &&
 	      read_from_file("strings_to_parse.txt", strings_to_parse) ) {
 
-		starting_symbol = nonterminals_vec.front();     // 'starting_symbol' is in the first line of 'nonterminals.txt'
+		// 'starting_symbol' is in the first line of 'nonterminals.txt'
+		starting_symbol = nonterminals_vec.front();     
 		
 		// convert the nonterminals into a set
 		nonterminals = set<string>( std::make_move_iterator(nonterminals_vec.begin()), 
@@ -244,9 +244,9 @@ int main() {
 		}
 
 		for (const auto &r : rule_set)
-			if (r.size() == 2)						// if the rule is terminal, i.e. A -> a
+			if (r.size() == 2)							// if the rule is terminal, i.e. A -> a
 				terminal_rules.insert(r);
-			else                                    // otherwise, i.e. when it's A -> B C
+			else										// otherwise, i.e. when it's A -> B C
 				nonterminal_rules.insert(r);
 
 		rule_set.clear();
