@@ -1,6 +1,7 @@
 #include <iostream>
 #include <vector>
 #include <algorithm> // we need std::replace
+#include <memory>
 #include <fstream>
 #include <string>
 #include <unordered_map>
@@ -25,7 +26,7 @@ private:
 	size_t dim_columns;
 
 	// the data
-	T **matrix{ nullptr };
+	std::unique_ptr< std::unique_ptr<T[]>[] > matrix{ nullptr };
 
 public:
 	// rw access to matrix elements
@@ -41,7 +42,6 @@ public:
 		for (size_t i = 0; i < dim_columns; ++i)
 			for (j = 0; j < dim_rows; ++j)
 				matrix[j][i] = m.matrix[j][i];
-		cerr << "copy assignment operator called" << '\n';
 		return *this;
 	}
 
@@ -50,20 +50,18 @@ public:
 		std::swap(this->matrix, m.matrix);
 		std::swap(this->dim_columns, m.dim_columns);
 		std::swap(this->dim_rows, m.dim_rows);
-		cerr << "move assignment operator called" << '\n';
 		return *this;
 	}
 
 	// constructor without fill value
 	Matrix(size_t const &a, size_t const &b) : dim_rows(a), dim_columns(b) {
 		assert(a > 0 && b > 0);
-		matrix = new (std::nothrow) T*[dim_columns];
-		assert(("out of memory",matrix != nullptr));
-		for (size_t i = 0; i < dim_columns; ++i){
-			matrix[i] = new (nothrow) T[dim_rows];
+		matrix = std::make_unique< std::unique_ptr<T[]>[] >(dim_columns);
+		assert(("out of memory", matrix != nullptr));
+		for (size_t i = 0; i < dim_columns; ++i) {
+			matrix[i] = std::make_unique<T[]> (dim_rows);
 			assert(("out of memory", matrix[i] != nullptr));
 		}
-		cerr << "constructor called" << '\n';
 	}
 
 	// constructor fills the matrix with fill_value
@@ -72,7 +70,6 @@ public:
 		for (size_t i = 0; i < dim_columns; ++i)
 			for (j = 0; j < dim_rows; ++j)
 				matrix[j][i] = fill_value;
-		cerr << "constructor called with fill_value" << '\n';
 	}
 
 	// default constructor
@@ -91,12 +88,9 @@ public:
 
 	// destructor
 	~Matrix() {
-		if (matrix != nullptr) {
-			for (size_t i = 0; i < dim_columns; ++i)
-				delete[] matrix[i];
-			delete[] matrix;
-			matrix = nullptr;
-		}
+		for (size_t i = 0; i < dim_columns; ++i) // unnecessary
+			matrix[i].release();
+		matrix.release();
 	}
 };
 
