@@ -34,6 +34,25 @@ public:
 		return matrix[row][col];
 	}
 
+	// copy assignment operator
+	Matrix<T>& operator=(Matrix<T> const &m) {
+		size_t j;
+		for (size_t i = 0; i < dim_columns; ++i)
+			matrix[i].reset();
+		matrix.reset();
+		dim_columns = m.dim_columns;
+		dim_rows = m.dim_rows;
+		matrix = std::make_unique< std::unique_ptr<T[]>[] >(dim_columns);
+		assert(("out of memory", matrix != nullptr));
+		for (size_t i = 0; i < dim_columns; ++i) {
+			matrix[i] = std::make_unique<T[]> (dim_rows);
+			assert(("out of memory", matrix[i] != nullptr));
+			for (j = 0; j < dim_rows; ++j)
+				matrix[j][i] = m.matrix[j][i];
+		}
+		return *this;
+	}
+
 	// move assigment operator
 	Matrix<T>& operator=(Matrix<T> &&m) {
 		std::swap(this->matrix, m.matrix);
