@@ -37,18 +37,18 @@ public:
 	// copy assignment operator
 	Matrix<T>& operator=(Matrix<T> const &m) {
 		size_t j;
-		for (size_t i = 0; i < dim_columns; ++i)
+		for (size_t i = 0; i < dim_rows; ++i)
 			matrix[i].reset();
 		matrix.reset();
-		dim_columns = m.dim_columns;
 		dim_rows = m.dim_rows;
-		matrix = std::make_unique< std::unique_ptr<T[]>[] >(dim_columns);
-		assert(("out of memory", matrix != nullptr));
-		for (size_t i = 0; i < dim_columns; ++i) {
-			matrix[i] = std::make_unique<T[]> (dim_rows);
-			assert(("out of memory", matrix[i] != nullptr));
-			for (j = 0; j < dim_rows; ++j)
-				matrix[j][i] = m.matrix[j][i];
+		dim_columns = m.dim_columns;
+		matrix = std::make_unique< std::unique_ptr<T[]>[] >(dim_rows);
+		assert(matrix != nullptr);
+		for (size_t i = 0; i < dim_rows; ++i) {
+			matrix[i] = std::make_unique<T[]> (dim_columns);
+			assert(matrix[i] != nullptr);
+			for (j = 0; j < dim_columns; ++j)
+				matrix[i][j] = m.matrix[i][j];
 		}
 		return *this;
 	}
@@ -64,20 +64,20 @@ public:
 	// constructor without fill value
 	Matrix(size_t const &a, size_t const &b) : dim_rows(a), dim_columns(b) {
 		assert(a > 0 && b > 0);
-		matrix = std::make_unique< std::unique_ptr<T[]>[] >(dim_columns);
-		assert(("out of memory", matrix != nullptr));
-		for (size_t i = 0; i < dim_columns; ++i) {
-			matrix[i] = std::make_unique<T[]> (dim_rows);
-			assert(("out of memory", matrix[i] != nullptr));
+		matrix = std::make_unique< std::unique_ptr<T[]>[] >(dim_rows);
+		assert(matrix != nullptr);
+		for (size_t i = 0; i < dim_rows; ++i) {
+			matrix[i] = std::make_unique<T[]> (dim_columns);
+			assert(matrix[i] != nullptr);
 		}
 	}
 
 	// constructor fills the matrix with fill_value
 	Matrix(size_t const &a, size_t const &b, T const &fill_value) : Matrix(a, b) {
 		size_t j;
-		for (size_t i = 0; i < dim_columns; ++i)
-			for (j = 0; j < dim_rows; ++j)
-				matrix[j][i] = fill_value;
+		for (size_t i = 0; i < dim_rows; ++i)
+			for (j = 0; j < dim_columns; ++j)
+				matrix[i][j] = fill_value;
 	}
 
 	// default constructor
