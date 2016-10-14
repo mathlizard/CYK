@@ -34,17 +34,6 @@ public:
 		return matrix[row][col];
 	}
 
-	// copy assignment operator
-	Matrix<T>& operator=(Matrix<T> const &m) {
-		size_t j;
-		this->~Matrix(); // risky, but works
-		new (this) Matrix(m.dim_rows, m.dim_columns);
-		for (size_t i = 0; i < dim_columns; ++i)
-			for (j = 0; j < dim_rows; ++j)
-				matrix[j][i] = m.matrix[j][i];
-		return *this;
-	}
-
 	// move assigment operator
 	Matrix<T>& operator=(Matrix<T> &&m) {
 		std::swap(this->matrix, m.matrix);
@@ -87,11 +76,7 @@ public:
 	}
 
 	// destructor
-	~Matrix() {
-		for (size_t i = 0; i < dim_columns; ++i) // unnecessary
-			matrix[i].release();
-		matrix.release();
-	}
+	~Matrix() = default;
 };
 
 // splits 's' into tokens, copies them into 'tokens_of_s'
