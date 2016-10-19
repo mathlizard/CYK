@@ -2,3 +2,4 @@ S->A S B
 S->a b
 A->a
 B->b
+
