@@ -52,9 +52,9 @@ public:
 
 	// move assigment operator
 	Matrix<T>& operator=(Matrix<T> &&m) {
-		std::swap(this->matrix_, m.matrix_);
-		std::swap(this->dim_columns_, m.dim_columns_);
-		std::swap(this->dim_rows_, m.dim_rows_);
+		swap(this->matrix_, m.matrix_);
+		swap(this->dim_columns_, m.dim_columns_);
+		swap(this->dim_rows_, m.dim_rows_);
 		return *this;
 	}
 
@@ -78,9 +78,9 @@ public:
 
 	// move constructor
 	Matrix(Matrix<T> &&m) {
-		std::swap(this->matrix_, m.matrix_);
-		std::swap(this->dim_columns_, m.dim_columns_);
-		std::swap(this->dim_rows_, m.dim_rows_);
+		swap(this->matrix_, m.matrix_);
+		swap(this->dim_columns_, m.dim_columns_);
+		swap(this->dim_rows_, m.dim_rows_);
 	}
 
 	bool empty() const {
