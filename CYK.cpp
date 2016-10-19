@@ -8,6 +8,8 @@
 #include <assert.h>
 #include <set>
 
+#define ID(i,j,k) (( i * k ) + j)
+
 using namespace std;
 
 // a rewrite rule 'A -> B C' is stored as a vector of strings : "A", "B", "C", ...
@@ -15,88 +17,80 @@ typedef vector<string> rule;
 
 typedef set<rule> rules;
 
-// generic Matrix datatype, will be good later too
+// Matrix_bare_bones
 template <class T>
 class Matrix {
 private:
 	// number of rows
-	size_t dim_rows;
+	size_t dim_rows_;
 
 	//number of columns
-	size_t dim_columns;
+	size_t dim_columns_;
 
 	// the data
-	std::unique_ptr< std::unique_ptr<T[]>[] > matrix{ nullptr };
+	std::unique_ptr<T[]> matrix_;
 
 public:
 	// rw access to matrix elements
 	T& operator()(size_t const &row, size_t const &col) {
-		return matrix[row][col];
+		return matrix_[ID(row,col,dim_columns_)];
 	}
 
 	// copy assignment operator
 	Matrix<T>& operator=(Matrix<T> const &m) {
 		size_t j;
-		for (size_t i = 0; i < dim_rows; ++i)
-			matrix[i].reset();
-		matrix.reset();
-		dim_rows = m.dim_rows;
-		dim_columns = m.dim_columns;
-		matrix = std::make_unique< std::unique_ptr<T[]>[] >(dim_rows);
-		assert(matrix != nullptr);
-		for (size_t i = 0; i < dim_rows; ++i) {
-			matrix[i] = std::make_unique<T[]> (dim_columns);
-			assert(matrix[i] != nullptr);
-			for (j = 0; j < dim_columns; ++j)
-				matrix[i][j] = m.matrix[i][j];
-		}
+		matrix_.reset();
+		dim_rows_ = m.dim_rows_;
+		dim_columns_ = m.dim_columns_;
+		matrix_ = std::make_unique<T[]>( dim_rows_ * dim_columns_ );
+		assert(matrix_ != nullptr);
+		for (size_t i = 0; i < dim_rows_; ++i)
+			for (j = 0; j < dim_columns_; ++j)
+				matrix_[ID(i,j,dim_columns_)] = m.matrix_[ID(i,j,dim_columns_)];
 		return *this;
 	}
 
 	// move assigment operator
 	Matrix<T>& operator=(Matrix<T> &&m) {
-		std::swap(this->matrix, m.matrix);
-		std::swap(this->dim_columns, m.dim_columns);
-		std::swap(this->dim_rows, m.dim_rows);
+		std::swap(this->matrix_, m.matrix_);
+		std::swap(this->dim_columns_, m.dim_columns_);
+		std::swap(this->dim_rows_, m.dim_rows_);
 		return *this;
 	}
 
 	// constructor without fill value
-	Matrix(size_t const &a, size_t const &b) : dim_rows(a), dim_columns(b) {
+	explicit Matrix(size_t const &a, size_t const &b) : dim_rows_(a), dim_columns_(b) {
 		assert(a > 0 && b > 0);
-		matrix = std::make_unique< std::unique_ptr<T[]>[] >(dim_rows);
-		assert(matrix != nullptr);
-		for (size_t i = 0; i < dim_rows; ++i) {
-			matrix[i] = std::make_unique<T[]> (dim_columns);
-			assert(matrix[i] != nullptr);
-		}
+		matrix_ = std::make_unique< T[] >( dim_rows_ * dim_columns_ );
+		assert(matrix_ != nullptr);
 	}
 
 	// constructor fills the matrix with fill_value
-	Matrix(size_t const &a, size_t const &b, T const &fill_value) : Matrix(a, b) {
+	explicit Matrix(size_t const &a, size_t const &b, T const &fill_value) : Matrix(a, b) {
 		size_t j;
-		for (size_t i = 0; i < dim_rows; ++i)
-			for (j = 0; j < dim_columns; ++j)
-				matrix[i][j] = fill_value;
+		for (size_t i = 0; i < dim_rows_; ++i)
+			for (j = 0; j < dim_columns_; ++j)
+				matrix_[ID(i,j,dim_columns_)] = fill_value;
 	}
 
 	// default constructor
-	Matrix() : dim_rows(0), dim_columns(0) {}
+	Matrix() : dim_rows_(0), dim_columns_(0), matrix_(nullptr) { }
 
 	// move constructor
 	Matrix(Matrix<T> &&m) {
-		std::swap(this->matrix, m.matrix);
-		std::swap(this->dim_columns, m.dim_columns);
-		std::swap(this->dim_rows, m.dim_rows);
+		std::swap(this->matrix_, m.matrix_);
+		std::swap(this->dim_columns_, m.dim_columns_);
+		std::swap(this->dim_rows_, m.dim_rows_);
 	}
 
 	bool empty() const {
-		return (matrix == nullptr);
+		return (matrix_ == nullptr);
 	}
 
 	// destructor
 	~Matrix() = default;
 };
+
 
 // splits 's' into tokens, copies them into 'tokens_of_s'
 void split(string s, string const &delimiter, vector<string> &tokens_of_s) {
