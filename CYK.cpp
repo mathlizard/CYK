@@ -38,15 +38,13 @@ public:
 
 	// copy assignment operator
 	Matrix<T>& operator=(Matrix<T> const &m) {
-		size_t j;
 		matrix_.reset();
 		dim_rows_ = m.dim_rows_;
 		dim_columns_ = m.dim_columns_;
 		matrix_ = std::make_unique<T[]>( dim_rows_ * dim_columns_ );
 		assert(matrix_ != nullptr);
-		for (size_t i = 0; i < dim_rows_; ++i)
-			for (j = 0; j < dim_columns_; ++j)
-				matrix_[ID(i,j,dim_columns_)] = m.matrix_[ID(i,j,dim_columns_)];
+		for (size_t i = 0; i < (dim_rows_ * dim_columns_); ++i)
+			matrix_[i] = m.matrix_[i];
 		return *this;
 	}
 
@@ -67,10 +65,8 @@ public:
 
 	// constructor fills the matrix with fill_value
 	explicit Matrix(size_t const &a, size_t const &b, T const &fill_value) : Matrix(a, b) {
-		size_t j;
-		for (size_t i = 0; i < dim_rows_; ++i)
-			for (j = 0; j < dim_columns_; ++j)
-				matrix_[ID(i,j,dim_columns_)] = fill_value;
+		for (size_t i = 0; i < (dim_rows_ * dim_columns_); ++i)
+			matrix_[i] = fill_value;
 	}
 
 	// default constructor
